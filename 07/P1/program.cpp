@@ -81,12 +81,6 @@ struct Hand {
         return false;
     }
 
-    Hand(std::string s, int b) {
-        cards = s;
-        bet = b;
-        figure = -1;
-    }
-
     Hand() {
         figure = -1;
     }
