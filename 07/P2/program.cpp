@@ -1,9 +1,8 @@
 #include <algorithm>
-#include <vector>
-#include <string>
 #include <fstream>
 #include <iostream>
-#include <array>
+#include <string>
+#include <vector>
 
 struct Hand {
     std::string cards;
@@ -62,7 +61,7 @@ struct Hand {
             } else {
                 if (jokers == 2)
                     figure = 0;
-                else if (jokers == 1) {
+                else if (jokers) {
                     figure = 1;
                 } else {
                     figure = 3;
@@ -80,7 +79,7 @@ struct Hand {
                     figure = 0;
                 } else if (jokers == 2) {
                     figure = 1;
-                } else if (jokers == 1) {
+                } else if (jokers) {
                     figure = 3;
                 } else {
                     figure = 5;
@@ -93,7 +92,7 @@ struct Hand {
                 figure = 1;
             } else if (jokers == 2) {
                 figure = 3;
-            } else if (jokers == 1) {
+            } else if (jokers) {
                 figure = 5;
             } else {
                 figure = 6;

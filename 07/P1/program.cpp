@@ -1,9 +1,8 @@
 #include <algorithm>
-#include <vector>
-#include <string>
 #include <fstream>
 #include <iostream>
-#include <array>
+#include <string>
+#include <vector>
 
 struct Hand {
     std::string cards;
