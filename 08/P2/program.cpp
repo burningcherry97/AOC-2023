@@ -58,6 +58,7 @@ int main(int argc, char** argv) {
 
     // output: 18113, 20569, 21797, 13201, 24253, 22411
     // res = lcm(output): 21366921060721
+    // the inputs are constructed so that the above is correct
 
     return 0;
 }
