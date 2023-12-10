@@ -114,14 +114,17 @@ int main(int argc, char** argv) {
     int X = scheme.front().size();
     int Y = scheme.size();
 
+    // double density graph, representing both spots on the map 
+    // and the middle points between them, allowing the 
+    // "sticking" between pipes
     auto graph = vector<vector<Node>>(Y*2+1,vector<Node>(X*2+1));
 
     graph[start_y*2+1][start_x*2+1] = {false, true};
     for (int i = 1; i < path1.size(); ++i) {
         graph[path1[i].second*2+1][path1[i].first*2+1] = {false, true};
         graph[path2[i].second*2+1][path2[i].first*2+1] = {false, true};
-        graph[(path1[i].second*2+path1[i-1].second*2)/2+1][(path1[i].first*2+path1[i-1].first*2)/2+1] = {false, true};
-        graph[(path2[i].second*2+path2[i-1].second*2)/2+1][(path2[i].first*2+path2[i-1].first*2)/2+1] = {false, true};
+        graph[path1[i].second+path1[i-1].second+1][path1[i].first+path1[i-1].first+1] = {false, true};
+        graph[path2[i].second+path2[i-1].second+1][path2[i].first+path2[i-1].first+1] = {false, true};
     }
 
     graph[0][0] = {false, true};
@@ -131,6 +134,7 @@ int main(int argc, char** argv) {
     int res = 0;
     for (int i = 0; i < Y; ++i) {
         for (int j = 0; j < X; ++j) {
+            // search only through the nodes that represent spots on the original map
             if (graph[i*2+1][j*2+1].enclosed) {
                 ++res;
             }
