@@ -118,21 +118,6 @@ void advance_all(std::vector<std::vector<Tile>>& scheme, std::vector<Beam>& beam
         }
         beams[i] = b;
     }
-    // for (auto& v : scheme) {
-    //     for (Tile& t : v) {
-    //         bool flag = false;
-    //         for (int i = 0; i < 4; ++i) {
-    //             flag = flag || t.energized[i];
-    //         }
-    //         if (flag) {
-    //             std::cout << '#';
-    //         } else {
-    //             std::cout << '.';
-    //         }
-    //     }
-    //     std::cout << '\n';
-    // }
-    // std::cout << '\n';
     beams.erase(remove_if(beams.begin(), 
                           beams.end(),
                           [](Beam& b){ return b.direction == -1; }),
@@ -167,7 +152,6 @@ int main(int argc, char** argv) {
             }
         }
     }
-    // scheme[0][0].energized[0] = true;
 
     while (!beams.empty()) {
         advance_all(scheme, beams);
@@ -176,24 +160,16 @@ int main(int argc, char** argv) {
     int res = 0;
     for (auto& v : scheme) {
         for (Tile& t : v) {
-            // bool flag = false;
             for (int i = 0; i < 4; ++i) {
                 if (t.energized[i]) {
                     ++res;
                     break;
                 }
-                // flag = flag || t.energized[i];
             }
-            // if (flag) {
-            //     cout << '#';
-            // } else {
-            //     cout << '.';
-            // }
         }
-        // cout << '\n';
     }
 
-    cout << res;
+    cout << res; // 7927
 
     return 0;
 }
