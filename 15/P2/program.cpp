@@ -73,14 +73,10 @@ int main(int argc, char** argv) {
         int box = aoc_hash(i.label);
         // cout << box << ' ';
         if (i.mode == 0) {
-            // remove_if(boxes[box].begin(), boxes[box].end(), [&](Lens& l){ return l.label == i.label; });
-            // doesn't work -- why?
-            for (int it = 0; it < boxes[box].size(); ++it) {
-                if (boxes[box][it].label == i.label) {
-                    boxes[box].erase(boxes[box].begin() + it);
-                    break;
-                }
-            }
+            boxes[box].erase(
+                remove_if(boxes[box].begin(), boxes[box].end(), 
+                [&](Lens& l){ return l.label == i.label; }), 
+                boxes[box].end());
         } else {
             bool found = false;
             for (Lens& l : boxes[box]) {
