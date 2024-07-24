@@ -1,222 +1,125 @@
-// EXTREMELY unoptimized (need to implement a priority_queue solution instead of a set) but it yields correct solutions
-
+#include <array>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
-#include <set>
+#include <queue>
 #include <vector>
 
 using namespace std;
 
-enum Direction { RIGHT, DOWN, LEFT, UP };
-
-Direction get_left(Direction d) {
-    switch (d)
-    {
-    case RIGHT:
-        return UP;
-    case DOWN:
-        return RIGHT;
-    case LEFT:
-        return DOWN;
-    case UP:
-        return LEFT;
-    }
-    throw "bad direction: get_left";
-}
-
-Direction get_right(Direction d) {
-    switch (d)
-    {
-    case RIGHT:
-        return DOWN;
-    case DOWN:
-        return LEFT;
-    case LEFT:
-        return UP;
-    case UP:
-        return RIGHT;
-    }
-    throw "bad direction: get_right";
-}
-
-struct Cell_state {
-    int cost;
-    int distance;
-    int direction;
-    int path_length;
-    Cell_state* left;
-    Cell_state* forward;
-    Cell_state* right;
-
-    Cell_state(int c) {
-        cost = c;
+struct Coordinates {
+    int y;
+    int x;
+    Coordinates operator+(const Coordinates& other) {
+        Coordinates result = *this;
+        result.x += other.x;
+        result.y += other.y;
+        return result;
     }
 };
 
-Cell_state* get_left(vector<vector<vector<vector<Cell_state>>>>& grid, int y, int x, int direction) {
-    if (direction == 0) {
-        if (y > 0) {
-            return &grid[y-1][x][3][0];
-        } else return nullptr;
-    }
-    if (direction == 1) {
-        if (x < grid.front().size() - 1) {
-            return &grid[y][x+1][0][0];
-        } else return nullptr;
-    }
-    if (direction == 2) {
-        if (y < grid.size() - 1) {
-            return &grid[y+1][x][1][0];
-        } else return nullptr;
-    }
-    if (direction == 3) {
-        if (x > 0) {
-            return &grid[y][x-1][2][0];
-        } else return nullptr;
-    }
-    return nullptr;
-}
-
-Cell_state* get_forward(vector<vector<vector<vector<Cell_state>>>>& grid, int y, int x, int direction, int path_length) {
-    if (path_length == 2) {
-        return nullptr;
-    }
-    if (direction == 3) {
-        if (y > 0) {
-            return &grid[y-1][x][3][path_length + 1];
-        } else return nullptr;
-    }
-    if (direction == 0) {
-        if (x < grid.front().size() - 1) {
-            return &grid[y][x+1][0][path_length + 1];
-        } else return nullptr;
-    }
-    if (direction == 1) {
-        if (y < grid.size() - 1) {
-            return &grid[y+1][x][1][path_length + 1];
-        } else return nullptr;
-    }
-    if (direction == 2) {
-        if (x > 0) {
-            return &grid[y][x-1][2][path_length + 1];
-        } else return nullptr;
-    }
-    return nullptr;
-}
-
-Cell_state* get_right(vector<vector<vector<vector<Cell_state>>>>& grid, int y, int x, int direction) {
-    if (direction == 2) {
-        if (y > 0) {
-            return &grid[y-1][x][3][0];
-        } else return nullptr;
-    }
-    if (direction == 3) {
-        if (x < grid.front().size() - 1) {
-            return &grid[y][x+1][0][0];
-        } else return nullptr;
-    }
-    if (direction == 0) {
-        if (y < grid.size() - 1) {
-            return &grid[y+1][x][1][0];
-        } else return nullptr;
-    }
-    if (direction == 1) {
-        if (x > 0) {
-            return &grid[y][x-1][2][0];
-        } else return nullptr;
-    }
-    return nullptr;
-}
+struct Node {
+    Coordinates coordinates;
+    Coordinates direction;
+    int distance;
+    int path_length;
+};
 
 int main(int argc, char** argv) {
-    // cout << "Hello!";
-
+    
     ifstream in{"input.txt"};
-    char c;
-    vector<vector<vector<vector<Cell_state>>>> grid; // Y, X, direction, path length
-    grid.push_back(vector<vector<vector<Cell_state>>>());
+    vector<vector<int>> grid;
+    grid.push_back(vector<int>());
+    int c;
     while ((c = in.get()) != EOF) {
         if (c == '\n') {
-            grid.push_back(vector<vector<vector<Cell_state>>>());
+            grid.push_back(vector<int>());
         } else {
-            grid.back().push_back(vector<vector<Cell_state>>());
-            for (int i = 0; i < 4; ++i) {
-                grid.back().back().push_back(vector<Cell_state>());
-                for (int j = 0; j < 3; ++j) {
-                    grid.back().back().back().push_back(Cell_state(c - '0'));
-                }
-            }
+            grid.back().push_back(c - '0');
         }
     }
     in.close();
 
-    const int SIZE_X = grid.front().size();
-    const int SIZE_Y = grid.size();
-    
-    set<Cell_state*> Q;
-
-    for (int y = 0; y < SIZE_Y; ++y) {
-        for (int x = 0; x < SIZE_X; ++x) {
-            for (int direction = 0; direction < 4; ++direction) {
-                for (int path_length = 0; path_length < 3; ++path_length) {
-                    Cell_state* cs = &grid[y][x][direction][path_length];
-                    cs->distance = INT32_MAX / 2;
-                    cs->direction = direction;
-                    cs->path_length = path_length;
-                    cs->left = get_left(grid, y, x, direction);
-                    cs->forward = get_forward(grid, y, x, direction, path_length);
-                    cs->right = get_right(grid, y, x, direction);
-                    Q.insert(cs);
+    // Y, X, direction, path length
+    vector<vector<array<array<int,4>,4>>> best(
+        grid.size(),
+        vector<array<array<int,4>,4>>(
+            grid.front().size(),
+            [] {
+                array<array<int,4>,4> result;
+                for (auto& direction_row : result) {
+                    for (int& n : direction_row) {
+                        n = INT32_MAX;
+                    }
                 }
-            }
-        }
-    }
+                return result;
+            } ()
+        )
+    );
 
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            grid[0][0][i][j].distance = 0;
-        }
-    }
+    auto cmp = [](Node& n1, Node& n2) { return n1.distance > n2.distance; };
+    priority_queue<Node, vector<Node>, decltype(cmp)> q(cmp);
 
-    while (!Q.empty()) {
-        if (Q.size() % 1000 == 0) cout << Q.size() << endl;
-        Cell_state* u = *Q.begin();
-        for (Cell_state* i : Q) {
-            if (i->distance < u->distance) {
-                u = i;
-            }
+    auto loss_at = [&](Coordinates coords) { return grid[coords.y][coords.x]; };
+    auto not_out_of_bounds = [&](Coordinates coords) { return coords.x >= 0 && coords.y >= 0 && coords.x < grid.front().size() && coords.y < grid.size(); };
+    auto get_left = [&](Coordinates direction) {
+        if (direction.x != 0) {
+            return Coordinates{-direction.x, 0};
+        } else {
+            return Coordinates{0, direction.y};
         }
-        Q.erase(u);
+    };
+    auto get_right = [&](Coordinates direction) {
+        if (direction.x != 0) {
+            return Coordinates{direction.x, 0};
+        } else {
+            return Coordinates{0, -direction.y};
+        }
+    };
+    auto dir_to_int = [&](Coordinates direction) {
+        if (direction.x == 1)
+            return 0;
+        if (direction.y == 1)
+            return 1;
+        if (direction.x == -1)
+            return 2;
+        return 3;
+    };
 
-        if (u->left != nullptr) {
-            int alt = u->distance + u->left->cost;
-            if (alt < u->left->distance) {
-                u->left->distance = alt;
-            }
+    Coordinates destination{grid.size() - 1, grid.front().size() - 1};
+
+    auto push_if_better = [&](Node n) {
+        if (n.distance < best[n.coordinates.y][n.coordinates.x][dir_to_int(n.direction)][n.path_length]) {
+            best[n.coordinates.y][n.coordinates.x][dir_to_int(n.direction)][n.path_length] = n.distance;
+            q.push(n);
+        }
+    };
+
+    push_if_better({{0, 0}, {1, 0}, 0, 0});
+    push_if_better({{0, 0}, {0, 1}, 0, 0});
+
+    while (!q.empty()) {
+        auto [pos, dir, dist, p_l] = q.top();
+
+        if (pos.x == destination.x && pos.y == destination.y) {
+            cout << dist << '\n';
+            return 0;
         }
 
-        if (u->forward != nullptr) {
-            int alt = u->distance + u->forward->cost;
-            if (alt < u->forward->distance) {
-                u->forward->distance = alt;
-            }
+        q.pop();
+
+        if (p_l < 3 && not_out_of_bounds(pos + dir) ) {
+            push_if_better({pos + dir, dir, dist + loss_at(pos + dir), p_l + 1});
         }
 
-        if (u->right != nullptr) {
-            int alt = u->distance + u->right->cost;
-            if (alt < u->right->distance) {
-                u->right->distance = alt;
-            }
+        if (not_out_of_bounds(pos + get_left(dir))) {
+            push_if_better({pos + get_left(dir), get_left(dir), dist + loss_at(pos + get_left(dir)), 1});
         }
-    }
 
-    for (int i = 0; i < 4; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            cout << grid.back().back()[i][j].distance << endl;
+        if (not_out_of_bounds(pos + get_right(dir))) {
+            push_if_better({pos + get_right(dir), get_right(dir), dist + loss_at(pos + get_right(dir)), 1});
         }
     }
 
     return 0;
 }
-
